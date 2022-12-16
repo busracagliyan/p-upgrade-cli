@@ -1,8 +1,8 @@
+import os
+import shutil
 import distro
 import requests
-import gi
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify
+from pathlib import Path
 
 class Check(object):
     def __init__(self):
@@ -21,22 +21,14 @@ class Check(object):
                 codename_yirmibir = "yirmibir"
 
         if self.codename == codename_yirmibir:
-            #self.notify("Sürümünüz güncel", "Pardus 21")
             print("Sürümünüz güncel -> Pardus 21")
             return False
         elif self.codename == codename_ondokuz:
-            #self.notify("Yeni bir sürüm mevcut","Pardus 21'e yükseltilebilir.")
             print("Yeni bir sürüm mevcut -> Pardus 21'e yükseltilebilir.")
             return True
         elif self.codename == codename_onyedi:
-            #self.notify("Yeni bir sürüm mevcut","Pardus 19'a yükseltilebilir.")
             print("Yeni bir sürüm mevcut -> Pardus 19'a yükseltilebilir.")
             return True
-
-    """def notify(self, message_title, message_text):
-        Notify.init("Pardus Upgrade Notification")
-        n = Notify.Notification.new(message_title, message_text)
-        n.show()"""
 
     def check_sourceslist(self):
         with open("/etc/apt/sources.list", "r") as file:
@@ -47,3 +39,31 @@ class Check(object):
                     return True
                 else:
                     return False
+
+    def checkcorrectsourceslist(self):
+        with open("/etc/apt/sources.list", "r") as file:
+            sourceslist = file.read()
+
+        source = ""
+        for line in sourceslist.split("\n"):
+            if "depo.pardus.org.tr" in line:
+                if "onyedi" in line:
+                    line = line.replace("onyedi", "ondokuz")
+                if "ondokuz" in line:
+                    line = line.replace("ondokuz", "yirmibir")
+                """if "yirmibir" in line:
+                    line = line.replace("yirmibir", "yirmiuc")"""
+                source += line + "\n"
+            else:
+                source += line + "\n"
+
+        tmpfile = "/etc/apt/sources.list.d/tmp/"
+        if os.path.exists("/etc/apt/sources.list.d/*"):
+            shutil.copy("/etc/apt/sources.list.d/",tmpfile, follow_symlinks=True)
+        shutil.rmtree("/etc/apt/sources.list.d", ignore_errors=True)
+        shutil.rmtree("/var/lib/apt/lists/", ignore_errors=True)
+        Path("/etc/apt/sources.list.d").mkdir(parents=True, exist_ok=True)
+        sfile = open("/etc/apt/sources.list", "w")
+        sfile.write(source)
+        sfile.flush()
+        sfile.close()
