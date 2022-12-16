@@ -2,12 +2,10 @@ import apt, apt_pkg
 
 class Package(object):
     def __init__(self):
-        #self.updatecache()
-        pass
+        self.cache = apt.Cache()
 
     def updatecache(self):
         try:
-            self.cache = apt.Cache()
             self.cache.open()
         except:
             return False
@@ -107,5 +105,13 @@ class Package(object):
         try:
             version = package.installed.version
         except:
-            version = None
+            version = "-"
         return version
+
+    """def upgrade(self):
+        cache = apt.Cache()
+        cache.update()
+        cache.open(None)
+        #cache.upgrade()
+        cache.upgrade(True)
+        cache.commit(apt.progress.base.InstallProgress)"""
